@@ -1,0 +1,30 @@
+#core_pool_size
+4
+
+#max_pool_size
+4
+
+#blocking_queue_size
+4
+
+#keep_alive_time
+5000
+
+#period
+8000
+
+#job_table_size
+4
+
+#exec_time
+1000
+7000
+3000
+4000
+
+#preds
+0 0 0 0
+1 0 0 0
+1 0 0 0
+0 1 1 0
+
