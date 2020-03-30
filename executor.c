@@ -68,10 +68,13 @@ void * get_callable_result (future_t * future) {
 
   // Protect against concurrent accesses. Block until the callable has
   // completed.
+  pthread_mutex_lock(&mts0);
 
+  pthread_cond_wait(&cvts0, &mts0);
   result = (void *) future->result;
   
   // Unprotect against concurrent accesses
+  pthread_mutex_unlock(&mts0);
 
   // Do not bother to deallocate future
   return result;
@@ -105,6 +108,8 @@ void * main_pool_thread (void * arg) {
         // As the callable is completed, the completed attribute and
         // the synchronisation objects should be updated to resume
         // threads waiting for the result.
+        future->completed = 1; // TRUE
+        pthread_cond_signal(&cvts0);
         
         break;
       }
