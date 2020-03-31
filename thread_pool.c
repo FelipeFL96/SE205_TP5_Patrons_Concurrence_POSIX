@@ -38,6 +38,11 @@ int pool_thread_create (thread_pool_t * thread_pool,
     thread_pool->size++;
     done = 1;
   }
+  else if (thread_pool->size < thread_pool->max_pool_size && force) {
+    pthread_create(&thread, NULL, main, future);
+    thread_pool->size++;
+    done = 1;
+  }
 
   // Do not protect the structure against concurrent accesses anymore
   pthread_mutex_unlock(&thread_pool->mutex);
