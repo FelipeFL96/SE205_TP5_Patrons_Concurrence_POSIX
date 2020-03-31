@@ -35,6 +35,7 @@ int pool_thread_create (thread_pool_t * thread_pool,
   // core_pool_size threads created.
   if (thread_pool->size < thread_pool->core_pool_size) {
     pthread_create(&thread, NULL, main, future);
+    thread_pool->size++;
     done = 1;
   }
 

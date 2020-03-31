@@ -43,11 +43,13 @@ future_t * submit_callable (executor_t * executor, callable_t * callable) {
 
   // Try to create a thread, but do not force to exceed core_pool_size
   // (last parameter set to false).
-  if (pool_thread_create (executor->thread_pool, main_pool_thread, future, 0))
+  if (pool_thread_create(executor->thread_pool, main_pool_thread, future, 0))
     return future;
-  
-  // When there are already enough created threads, queue the callable
+
+  // When there are already enough created threads, queue the future
   // in the blocking queue.
+  if (protected_buffer_add(executor->futures, future))
+    return future;
 
   // When the queue is full, pop the first future from the queue and
   // push the current one.
@@ -124,9 +126,10 @@ void * main_pool_thread (void * arg) {
     future = NULL;
     if (executor->keep_alive_time == FOREVER) {
       // If the executor does not deallocate pool threads after being
-      // inactive for a xhile, just wait for the next available
+      // inactive for a while, just wait for the next available
       // callable / future.
-      
+      future = protected_buffer_get(executor->futures);
+
       // If there is no callable to handle, remove the current pool
       // thread from the pool. 
       if ((future == NULL) && pool_thread_remove(executor->thread_pool))
@@ -136,7 +139,7 @@ void * main_pool_thread (void * arg) {
       // If the executor is configured to release a thread when it is
       // idle for keep_alive_time milliseconds, try to get a new
       // callable / future during at most keep_alive_time ms.
-      
+      future = protected_buffer_poll(executor->futures, (struct timespec *) &executor->keep_alive_time);
       // If there is no callable to handle, remove the current pool
       // thread from the pool. And then, complete.
       if ((future == NULL) && pool_thread_remove (executor->thread_pool))
