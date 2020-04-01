@@ -40,7 +40,6 @@ future_t * submit_callable (executor_t * executor, callable_t * callable) {
 
   // Future must include synchronisation objects to block threads
   // until the result of the callable computation becames available.
-
   // Try to create a thread, but do not force to exceed core_pool_size
   // (last parameter set to false).
   if (pool_thread_create(executor->thread_pool, main_pool_thread, future, 0))
@@ -75,7 +74,9 @@ void * get_callable_result (future_t * future) {
   // completed.
   pthread_mutex_lock(&mts0);
 
-  pthread_cond_wait(&cvts0, &mts0);
+  while (!future->completed)
+    pthread_cond_wait(&cvts0, &mts0);
+
   result = (void *) future->result;
   
   // Unprotect against concurrent accesses
