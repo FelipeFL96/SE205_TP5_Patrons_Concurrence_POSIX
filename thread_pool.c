@@ -66,10 +66,18 @@ int pool_thread_remove (thread_pool_t * thread_pool) {
   // can be deallocated.
   pthread_mutex_lock(&thread_pool->mutex);
 
-  if (thread_pool->size > thread_pool->core_pool_size) {
+  if (thread_pool->shutdown) {
+    thread_pool->size--;
+    done = 1;
+
+    if (thread_pool->size == 0)
+      pthread_cond_signal(&thread_pool->empty);
+  }
+  else if (thread_pool->size > thread_pool->core_pool_size) {
     thread_pool->size--;
     done = 1;
   }
+
 
   pthread_mutex_unlock(&thread_pool->mutex);
 
@@ -83,6 +91,10 @@ int pool_thread_remove (thread_pool_t * thread_pool) {
 // structure against concurrent accesses.
 void wait_thread_pool_empty (thread_pool_t * thread_pool) {
   pthread_mutex_lock(&thread_pool->mutex);
+
+  while (thread_pool->size != 0)
+    pthread_cond_wait(&thread_pool->empty, &thread_pool->mutex);
+
   pthread_mutex_unlock(&thread_pool->mutex);
 }  
 

@@ -164,6 +164,8 @@ void executor_shutdown (executor_t * executor) {
   thread_pool_shutdown(thread_pool);
   
   // Fill the queue of null futures to unblock potential threads
+  while(protected_buffer_add(executor->futures, NULL));
+
   wait_thread_pool_empty(executor->thread_pool);
   printf ("%06ld [executor_shutdown]\n", relative_clock());
 }
