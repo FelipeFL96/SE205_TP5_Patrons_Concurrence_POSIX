@@ -143,10 +143,14 @@ void * main_pool_thread (void * arg) {
       // If the executor is configured to release a thread when it is
       // idle for keep_alive_time milliseconds, try to get a new
       // callable / future during at most keep_alive_time ms.
-      future = protected_buffer_poll(executor->futures, (struct timespec *) &executor->keep_alive_time);
+      gettimeofday (&tv_deadline, NULL);
+      TIMEVAL_TO_TIMESPEC (&tv_deadline, &ts_deadline);
+      add_millis_to_timespec(&ts_deadline, executor->keep_alive_time);
+      future = protected_buffer_poll(executor->futures, &ts_deadline);
+
       // If there is no callable to handle, remove the current pool
       // thread from the pool. And then, complete.
-      if ((future == NULL) && pool_thread_remove (executor->thread_pool))
+      if ((future == NULL) && pool_thread_remove(executor->thread_pool))
         break;
 
     }
