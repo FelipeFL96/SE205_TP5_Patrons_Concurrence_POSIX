@@ -121,6 +121,8 @@ void * main_pool_thread (void * arg) {
       }
 
       // When the callable is periodic, wait for the next release time.
+      add_millis_to_timespec (&ts_deadline, callable->period);
+      delay_until(&ts_deadline);
 
       // Even when this callable is periodic, check whether the
       // executor requested a shutdown
